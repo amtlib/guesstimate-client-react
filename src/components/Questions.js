@@ -9,7 +9,13 @@ class Questions extends Component {
         super(props)
         this.state = {
             category: {},
-            questions: []
+            questions: [],
+            newQuestion: {
+                question: '',
+                correctAnswer: '',
+                type: 'value',
+                answers: [],
+            }
         }
     }
     componentDidMount() {
@@ -25,8 +31,26 @@ class Questions extends Component {
         var elems = document.querySelectorAll('select');
         M.FormSelect.init(elems, {});
     }
+    addQuestion = (e) => {
+        axios.post(`${config.SERVER_PATH}/api/categories/${this.state.category.id}/questions`, {...this.state.newQuestion}).then(response => {
+            console.log(response)
+        })
+    }
+    formChanged = (e) => {
+        if(e.target.name === 'answers'){
+            if(this.state.newQuestion.type === 'slider' && e.target.value.indexOf('-') !== -1){
+                this.setState({newQuestion: {...this.state.newQuestion, answers: e.target.value.split('-').map(n => parseFloat(n))}})
+            }else if(this.state.newQuestion.type === 'value' && e.target.value.indexOf(',') !== -1){
+                this.setState({newQuestion: {...this.state.newQuestion, answers: e.target.value.split(',').map(n => parseFloat(n))}})
+            }else{
+                // error
+                console.log('wrong input!!!')
+            }
+        }else{
+            this.setState({newQuestion: {...this.state.newQuestion, [e.target.name]: e.target.value}})
+        }
+    }
     render() {
-
         return (
             <div className="container">
                 <h1 className="center">{this.state.category.name}</h1>
@@ -38,19 +62,19 @@ class Questions extends Component {
                 <div id="addQuestion" className="modal">
                     <div className="modal-content">
                         <h4>Add new question</h4>
-                        <input type="text" name="newQuestionText" id="newQuestionText" placeholder="Question..." className="form-field" />
+                        <input type="text" onChange={this.formChanged} name="question" id="newQuestionText" placeholder="Question..." className="form-field" />
                         <div className="form-field">
-                            <select name="newQuestionType" defaultValue="slider">
-                                <option htmlvalue="value">Value</option>
-                                <option htmlvalue="slider">Slider</option>
+                            <select name="type" onChange={this.formChanged}>
+                                <option>value</option>
+                                <option>slider</option>
                             </select>
                         </div>
                         
-                        <input type="text" name="newQuestionCorrectAnswer" id="newQuestionCorrectAnswer" className="form-field" placeholder="Correct Answer"/>
-                        <input type="text" name="newQuestionAnswers" id="newQuestionAnswers" className="form-field" placeholder="20-30 if slider or 2,3,6,3 if value"/>
+                        <input type="text" onChange={this.formChanged} name="correctAnswer" id="newQuestionCorrectAnswer" className="form-field" placeholder="Correct Answer"/>
+                        <input type="text" onChange={this.formChanged} name="answers" id="newQuestionAnswers" className="form-field" placeholder="20-30 if slider or 2,3,6,3 if value"/>
                     </div>
                     <div className="modal-footer">
-                        <a href="#!" className="modal-close btn-flat green white-text">Add!</a>
+                        <button onClick={this.addQuestion} className="modal-close btn-flat green white-text">Add!</button>
                     </div>
                 </div>
             </div>
